@@ -9,16 +9,18 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Label,
+  Legend
 } from 'recharts';
 
-// Define aesthetic colors for different percentiles
+// Update color palette for better distinction
 const CHART_COLORS = {
-  median: '#2E86C1',    // Blue
-  p25: '#27AE60',      // Green
-  p75: '#27AE60',      // Green
-  p5: '#E74C3C',       // Red
-  p95: '#E74C3C',      // Red
+  median: '#0072B2',    // Blue
+  p75: '#009E73',      // Green
+  p95: '#D55E00',      // Orange
+  p25: '#F0E442',      // Yellow
+  p5: '#CC79A7',       // Purple
   other: '#95A5A6'     // Gray for other percentiles
 };
 
@@ -40,15 +42,21 @@ const parseINRInput = (str) => {
   return parseInt(s, 10) || 0;
 };
 
+// Custom label for percentile lines
+const PercentileLabel = ({ x, y, value, label }) => (
+  <text x={x + 8} y={y} dy={4} fontSize={13} fontWeight="bold" fill="#444" textAnchor="start">{label}</text>
+);
+
 function App() {
   const [form, setForm] = useState({
-    initial_corpus: 100000,
+    initial_corpus: 40000000, // 4 Cr
+    current_monthly_expense: 250000, // 2.5 L
     start_year: 2025,
-    end_year: 2045,
-    expected_return_pct: 8.0,
-    return_std_dev_pct: 12.0,
-    inflation_pct: 2.5,
-    inflation_std_dev_pct: 1.0,
+    end_year: 2079,
+    expected_return_pct: 12.0,
+    return_std_dev_pct: 9.0,
+    inflation_pct: 6.0,
+    inflation_std_dev_pct: 2.0,
     num_simulations: 100
   });
 
@@ -56,10 +64,17 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showAllPercentiles, setShowAllPercentiles] = useState(false);
-  const [corpusInput, setCorpusInput] = useState(formatINRInput(form.initial_corpus));
+  const [corpusInput, setCorpusInput] = useState(formatINRInput(10000000));
   const [corpusFocused, setCorpusFocused] = useState(false);
-  const [expenseInput, setExpenseInput] = useState('');
+  const [expenseInput, setExpenseInput] = useState(formatINRInput(250000));
   const [expenseFocused, setExpenseFocused] = useState(false);
+  const [visibleTraces, setVisibleTraces] = useState({
+    p95: true,
+    p75: true,
+    median: true,
+    p25: true,
+    p5: true
+  });
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -99,6 +114,10 @@ function App() {
   const handleExpenseFocus = () => {
     setExpenseInput((form.current_monthly_expense || '').toString());
     setExpenseFocused(true);
+  };
+
+  const handleTraceToggle = (trace) => {
+    setVisibleTraces((prev) => ({ ...prev, [trace]: !prev[trace] }));
   };
 
   const fetchSimulationData = async (e) => {
@@ -214,7 +233,7 @@ function App() {
 
           {simulationData && (
             <div className="chart-container">
-              <div className="chart-controls">
+              <div className="chart-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', alignItems: 'center' }}>
                 <label className="toggle-label">
                   <input
                     type="checkbox"
@@ -223,9 +242,25 @@ function App() {
                   />
                   Show All Percentiles
                 </label>
+                <span style={{ marginLeft: '2em', fontWeight: 500 }}>Show/Hide Percentiles:</span>
+                <label style={{ color: CHART_COLORS.p95 }}>
+                  <input type="checkbox" checked={visibleTraces.p95} onChange={() => handleTraceToggle('p95')} /> 95th
+                </label>
+                <label style={{ color: CHART_COLORS.p75 }}>
+                  <input type="checkbox" checked={visibleTraces.p75} onChange={() => handleTraceToggle('p75')} /> 75th
+                </label>
+                <label style={{ color: CHART_COLORS.median }}>
+                  <input type="checkbox" checked={visibleTraces.median} onChange={() => handleTraceToggle('median')} /> 50th
+                </label>
+                <label style={{ color: CHART_COLORS.p25 }}>
+                  <input type="checkbox" checked={visibleTraces.p25} onChange={() => handleTraceToggle('p25')} /> 25th
+                </label>
+                <label style={{ color: CHART_COLORS.p5 }}>
+                  <input type="checkbox" checked={visibleTraces.p5} onChange={() => handleTraceToggle('p5')} /> 5th
+                </label>
               </div>
               <ResponsiveContainer width="100%" height={500}>
-                <LineChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <LineChart margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="year"
@@ -236,55 +271,71 @@ function App() {
                   />
                   <YAxis
                     tickFormatter={formatINR}
-                    label={{ value: 'Portfolio Value (INR)', angle: -90, position: 'insideLeft' }}
+                    label={{ value: 'Portfolio Value\n(INR)', angle: -90, position: 'insideLeft', offset: 0 }}
+                    width={120}
                   />
                   <Tooltip
                     formatter={(value) => formatINR(value)}
                     labelFormatter={(year) => `Year: ${year}`}
+                    wrapperStyle={{ zIndex: 1000 }}
                   />
-                  
-                  {/* Always show main percentiles, mapped to actual years */}
-                  <Line
-                    type="monotone"
-                    data={mapToActualYears(simulationData.percentiles.median)}
-                    dataKey="value"
-                    stroke={CHART_COLORS.median}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    data={mapToActualYears(simulationData.percentiles.p25)}
-                    dataKey="value"
-                    stroke={CHART_COLORS.p25}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    data={mapToActualYears(simulationData.percentiles.p75)}
-                    dataKey="value"
-                    stroke={CHART_COLORS.p75}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    data={mapToActualYears(simulationData.percentiles.p5)}
-                    dataKey="value"
-                    stroke={CHART_COLORS.p5}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    data={mapToActualYears(simulationData.percentiles.p95)}
-                    dataKey="value"
-                    stroke={CHART_COLORS.p95}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-
+                  <Legend verticalAlign="top" height={36} iconType="plainline"/>
+                  {/* Conditionally render each percentile line based on visibility */}
+                  {visibleTraces.p95 && (
+                    <Line
+                      type="monotone"
+                      data={mapToActualYears(simulationData.percentiles.p95)}
+                      dataKey="value"
+                      stroke={CHART_COLORS.p95}
+                      strokeWidth={2}
+                      dot={false}
+                      name="95th Percentile"
+                    />
+                  )}
+                  {visibleTraces.p75 && (
+                    <Line
+                      type="monotone"
+                      data={mapToActualYears(simulationData.percentiles.p75)}
+                      dataKey="value"
+                      stroke={CHART_COLORS.p75}
+                      strokeWidth={2}
+                      dot={false}
+                      name="75th Percentile"
+                    />
+                  )}
+                  {visibleTraces.median && (
+                    <Line
+                      type="monotone"
+                      data={mapToActualYears(simulationData.percentiles.median)}
+                      dataKey="value"
+                      stroke={CHART_COLORS.median}
+                      strokeWidth={2}
+                      dot={false}
+                      name="50th Percentile (Median)"
+                    />
+                  )}
+                  {visibleTraces.p25 && (
+                    <Line
+                      type="monotone"
+                      data={mapToActualYears(simulationData.percentiles.p25)}
+                      dataKey="value"
+                      stroke={CHART_COLORS.p25}
+                      strokeWidth={2}
+                      dot={false}
+                      name="25th Percentile"
+                    />
+                  )}
+                  {visibleTraces.p5 && (
+                    <Line
+                      type="monotone"
+                      data={mapToActualYears(simulationData.percentiles.p5)}
+                      dataKey="value"
+                      stroke={CHART_COLORS.p5}
+                      strokeWidth={2}
+                      dot={false}
+                      name="5th Percentile"
+                    />
+                  )}
                   {/* Show other percentiles only when toggled, mapped to actual years */}
                   {showAllPercentiles && simulationData.paths.map((path, index) => (
                     <Line
