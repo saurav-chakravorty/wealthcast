@@ -1,0 +1,180 @@
+#root {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.app-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.main-content {
+  display: flex;
+  gap: 3rem;
+  margin-top: 2rem;
+  align-items: flex-start;
+}
+
+.input-section {
+  flex: 0 0 380px;
+  max-width: 420px;
+  min-width: 320px;
+}
+
+.chart-section {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.card {
+  background: #1a1a1a;
+  padding: 2em;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.card label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  text-align: left;
+}
+
+.card input {
+  padding: 0.5em;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background: #2a2a2a;
+  color: white;
+}
+
+.card button {
+  margin-top: 1em;
+  background: #646cff;
+  color: white;
+  border: none;
+  padding: 0.8em;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.card button:hover {
+  background: #535bf2;
+}
+
+.card button:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.chart-container {
+  background: #1a1a1a;
+  padding: 2em 2em 2em 1.5em;
+  border-radius: 12px;
+  height: 100%;
+  min-width: 350px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.chart-controls {
+  margin-bottom: 1em;
+  text-align: left;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  cursor: pointer;
+}
+
+.error {
+  color: #ff4444;
+  margin: 1em 0;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .input-section {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+  }
+  .chart-section {
+    width: 100%;
+    min-width: 0;
+  }
+  .chart-container {
+    min-width: 0;
+    padding: 1em;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-container {
+    padding: 0.5rem;
+  }
+  .main-content {
+    gap: 1rem;
+  }
+  .chart-container {
+    padding: 0.5em;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .card {
+    background: #f9f9f9;
+  }
+  
+  .card input {
+    background: white;
+    color: #213547;
+    border: 1px solid #ddd;
+  }
+  
+  .chart-container {
+    background: #f9f9f9;
+  }
+}
