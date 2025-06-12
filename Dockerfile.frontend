@@ -7,7 +7,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # Copy source
-COPY index.html vite.config.js .
+COPY index.html vite.config.js ./
 COPY public ./public
 COPY src ./src
 
