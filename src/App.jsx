@@ -27,7 +27,7 @@ const CHART_COLORS = {
 // Base URL for the backend API. When running inside Docker this will be
 // injected at build time via VITE_BACKEND_URL. Fallback to relative path for
 // local development without Docker.
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '';
+const API_BASE_URL = 'backend.railway.internal'
 
 // Helper to format a number as lakh/crore for input display
 const formatINRInput = (value) => {
