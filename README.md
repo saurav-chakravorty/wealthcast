@@ -1,106 +1,106 @@
-# Financial Scenario Analyzer
+# WealthCast – Financial Scenario Analyzer
 
-This application is a financial scenario analyzer that uses Monte Carlo simulations to project potential outcomes based on user-defined inputs. It features a Python FastAPI backend and a React frontend.
+WealthCast is a modern financial scenario analyzer that uses Monte Carlo simulations to project potential investment outcomes based on user-defined parameters. It features a Python FastAPI backend and a React (Vite) frontend, with a clean, interactive UI and advanced percentile visualization.
 
-## Project Overview
+---
 
-Users can input:
-- Current corpus (initial investment amount)
-- Investment strategy (debt to equity ratio)
-- Expected returns (for different asset classes)
-- Standard deviation of returns (volatility of asset classes)
+## Features
 
-The application will then:
-- Generate multiple financial scenarios using Monte Carlo simulation.
-- Display the results as a chart, showing the range of potential portfolio values over time.
+- **Monte Carlo Simulation:** Project your portfolio's future value under uncertainty.
+- **Percentile Visualization:** See 5th, 25th, 50th (median), 75th, and 95th percentiles.
+- **Expense Modeling:** Account for inflation-adjusted expenses in your retirement plan.
+- **Indian Rupee Support:** All values in ₹, with lakh/crore formatting.
+- **Interactive UI:** Toggle traces, adjust parameters, and see results instantly.
+- **Docker & Railway Ready:** Easy to deploy locally or in the cloud.
 
-## Prerequisites
-
-- Node.js and npm (for the frontend)
-- Python 3.8+ and UV (for the backend)
-
-## Setup and Running the Application
-
-### Backend (FastAPI)
-
-1.  **Navigate to the project root directory.**
-2.  **Create and activate a Python virtual environment using UV:**
-    ```bash
-    uv venv .venv
-    source .venv/bin/activate
-    ```
-    *(If you have already created a virtual environment and installed dependencies as per earlier steps, you can skip to step 4)*
-3.  **Install Python dependencies:**
-    ```bash
-    uv pip install fastapi uvicorn
-    ```
-4.  **Run the backend server:**
-    Navigate to the project root directory (if not already there) and run:
-    ```bash
-    uvicorn backend.main:app --reload --port 8000
-    ```
-    The backend will be accessible at `http://localhost:8000`.
-
-### Frontend (React + Vite)
-
-1.  **Navigate to the project root directory.**
-2.  **Install frontend dependencies (if not already done):**
-    ```bash
-    npm install
-    ```
-3.  **Run the frontend development server:**
-    ```bash
-    npm run dev
-    ```
-    The frontend will be accessible at `http://localhost:5173` (or another port if 5173 is busy - check your terminal output).
-
-### Docker Compose
-
-The project includes a `docker-compose.yml` file to simplify running both the
-backend and frontend using Docker. Build and start the containers with:
-
-```bash
-docker compose up --build
-```
-
-This will expose the backend at `http://localhost:8000` and the frontend at
-`http://localhost:5173`.
+---
 
 ## Project Structure
 
 ```
 /
 ├── backend/                # FastAPI backend code
-│   └── main.py             # Main FastAPI application
-├── public/                 # Static assets for the frontend
+│   ├── main.py             # Main FastAPI application
+│   └── ...                 # Backend tests, etc.
 ├── src/                    # React frontend source code
-│   ├── assets/             # Frontend assets (images, svgs)
 │   ├── App.jsx             # Main React App component
 │   ├── main.jsx            # Entry point for the React app
 │   └── ...                 # Other React components and CSS
-├── .github/
-│   └── copilot-instructions.md # Instructions for GitHub Copilot
-├── .venv/                  # Python virtual environment (if created with `uv venv .venv`)
-├── node_modules/           # Node.js dependencies
-├── eslint.config.js        # ESLint configuration
-├── index.html              # Main HTML file for Vite
-├── package.json            # Frontend project metadata and dependencies
-├── package-lock.json       # Exact versions of frontend dependencies
-├── README.md               # This file
-└── vite.config.js          # Vite configuration
+├── public/                 # Static assets for the frontend
+├── frontend/               # (optional) for Docker context
+├── Dockerfile.backend      # Backend Dockerfile
+├── Dockerfile.frontend     # Frontend Dockerfile
+├── docker-compose.yml      # Compose file for local multi-service dev
+├── package.json            # Frontend dependencies
+├── requirement.txt         # Python dependencies
+├── index.html              # Vite entry point
+└── README.md               # This file
 ```
 
-## Further Development
+---
 
-- Implement API endpoints in `backend/main.py` for:
-    - Receiving user inputs (corpus, strategy, expected returns, std dev).
-    - Triggering Monte Carlo simulations.
-    - Returning simulation results.
-- Develop the Monte Carlo simulation logic.
-- Implement Pydantic models for request/response data validation in the backend.
-- Build React components in the `src/` directory to:
-    - Create forms for user inputs.
-    - Display simulation results using charts (e.g., using a library like Chart.js or Recharts).
-    - Interact with the backend APIs.
-- Add error handling and user feedback mechanisms.
-- Implement styling for a user-friendly interface.
+## Quick Start (Local)
+
+### 1. **Clone the repository**
+```bash
+git clone https://github.com/yourusername/wealthcast.git
+cd wealthcast
+```
+
+### 2. **Run with Docker Compose**
+```bash
+docker-compose up --build
+```
+- Frontend: [http://localhost](http://localhost)
+- Backend: [http://localhost:8000/docs](http://localhost:8000/docs) (Swagger UI)
+
+### 3. **Manual (without Docker)**
+#### Backend
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r ../requirement.txt
+uvicorn main:app --reload --port 8000
+```
+#### Frontend
+```bash
+npm install
+npm run dev
+```
+- Visit [http://localhost:5173](http://localhost:5173)
+
+---
+
+
+## Development Notes
+
+- **Frontend:** React + Vite, Recharts for visualization, INR formatting.
+- **Backend:** FastAPI, NumPy for simulation, CORS enabled.
+- **Testing:** Backend unit tests in `backend/test_main.py`.
+
+---
+
+## Contributing
+
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+## License
+
+[MIT](LICENSE) (or your preferred license)
+
+---
+
+## Credits
+
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Recharts](https://recharts.org/)
+
+---
+
+**Questions?**  
+Open an issue or contact the maintainer.
