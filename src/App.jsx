@@ -27,7 +27,7 @@ const CHART_COLORS = {
 // Base URL for the backend API. When running inside Docker this will be
 // injected at build time via VITE_BACKEND_URL. Fallback to relative path for
 // local development without Docker.
-const API_BASE_URL = 'http://localhost:8000'
+const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 // Helper to format a number as lakh/crore for input display
 const formatINRInput = (value) => {
@@ -131,7 +131,7 @@ function App() {
     setError(null);
     setSimulationData(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/simulate`, {
+      const response = await fetch(`${backendUrl}/api/simulate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
