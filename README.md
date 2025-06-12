@@ -54,6 +54,18 @@ The application will then:
     ```
     The frontend will be accessible at `http://localhost:5173` (or another port if 5173 is busy - check your terminal output).
 
+### Docker Compose
+
+The project includes a `docker-compose.yml` file to simplify running both the
+backend and frontend using Docker. Build and start the containers with:
+
+```bash
+docker compose up --build
+```
+
+This will expose the backend at `http://localhost:8000` and the frontend at
+`http://localhost:5173`.
+
 ## Project Structure
 
 ```

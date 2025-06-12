@@ -24,6 +24,11 @@ const CHART_COLORS = {
   other: '#95A5A6'     // Gray for other percentiles
 };
 
+// Base URL for the backend API. When running inside Docker this will be
+// injected at build time via VITE_BACKEND_URL. Fallback to relative path for
+// local development without Docker.
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '';
+
 // Helper to format a number as lakh/crore for input display
 const formatINRInput = (value) => {
   if (value === '' || value === null || isNaN(value)) return '';
@@ -126,7 +131,7 @@ function App() {
     setError(null);
     setSimulationData(null);
     try {
-      const response = await fetch('https://wealthcast-production.up.railway.app:8000/api/simulate', {
+      const response = await fetch(`${API_BASE_URL}/api/simulate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
