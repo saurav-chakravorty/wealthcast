@@ -51,7 +51,7 @@ cd wealthcast
 ```bash
 docker-compose up --build
 ```
-- Frontend: [http://localhost](http://localhost)
+- Frontend: [http://localhost:5173/](http://localhost:5173/)
 - Backend: [http://localhost:8000/docs](http://localhost:8000/docs) (Swagger UI)
 
 ### 3. **Manual (without Docker)**
