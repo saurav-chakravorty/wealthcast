@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import {
   LineChart,
@@ -13,6 +11,7 @@ import {
   Label,
   Legend
 } from 'recharts';
+import logo from '/wealthcast-logo.png'; // Adjust the filename/extension as needed
 
 // Update color palette for better distinction
 const CHART_COLORS = {
@@ -165,6 +164,7 @@ function App() {
 
   return (
     <div className="app-container">
+      <img src={logo} alt="Wealthcast Logo" style={{ height: 60, marginBottom: 16 }} />
       <h1>Financial Scenario Analyzer</h1>
       <div className="main-content">
         <div className="input-section">
