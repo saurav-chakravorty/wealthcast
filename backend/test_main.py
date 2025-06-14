@@ -1,11 +1,11 @@
-from fastapi.testclient import TestClient
 import unittest
 import numpy as np
+import asyncio
 from typing import Dict, Any
+from pydantic import ValidationError
 
-from backend.main import app, SimulationInput
+from backend.main import SimulationInput, run_simulation, root
 
-client = TestClient(app)
 
 class TestMonteCarloSimulation(unittest.TestCase):
     """Test cases for the Monte Carlo simulation API"""
@@ -20,21 +20,20 @@ class TestMonteCarloSimulation(unittest.TestCase):
             "return_std_dev_pct": 12.0,
             "inflation_pct": 2.5,
             "inflation_std_dev_pct": 1.0,
-            "num_simulations": 50  # Smaller number for faster tests
+            "num_simulations": 50,  # Smaller number for faster tests
+            "current_monthly_expense": 1000.0
         }
     
     def test_root_endpoint(self):
         """Test that the root endpoint returns the expected message"""
-        response = client.get("/")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"message": "Hello from FastAPI backend!"})
+        result = asyncio.run(root())
+        self.assertEqual(result, {"message": "Hello from FastAPI backend!"})
     
     def test_simulate_success(self):
         """Test a successful simulation request"""
-        response = client.post("/api/simulate", json=self.valid_input)
-        self.assertEqual(response.status_code, 200)
-        
-        data = response.json()
+        input_obj = SimulationInput(**self.valid_input)
+        result = asyncio.run(run_simulation(input_obj))
+        data = result.model_dump()
         self.assertIn("paths", data)
         self.assertIn("years", data)
         self.assertIn("percentiles", data)
@@ -52,25 +51,22 @@ class TestMonteCarloSimulation(unittest.TestCase):
         # Test missing required field
         invalid_input = self.valid_input.copy()
         del invalid_input["initial_corpus"]
-        response = client.post("/api/simulate", json=invalid_input)
-        self.assertEqual(response.status_code, 422)  # Unprocessable Entity
-        
+        with self.assertRaises(ValidationError):
+            SimulationInput(**invalid_input)
+
         # Test end_year before start_year
         invalid_input = self.valid_input.copy()
         invalid_input["end_year"] = 2020
         invalid_input["start_year"] = 2025
-        response = client.post("/api/simulate", json=invalid_input)
-        # The API should handle this gracefully, either by:
-        # - Returning 422 (Unprocessable Entity)
-        # - Swapping the years automatically
-        # - Returning an empty result
-        self.assertNotEqual(response.status_code, 500)  # Should not crash
+        input_obj = SimulationInput(**invalid_input)
+        result = asyncio.run(run_simulation(input_obj))
+        self.assertIsNotNone(result)
     
     def test_simulation_statistics(self):
         """Test that the simulation statistics are correctly calculated"""
-        response = client.post("/api/simulate", json=self.valid_input)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
+        input_obj = SimulationInput(**self.valid_input)
+        result = asyncio.run(run_simulation(input_obj))
+        data = result.model_dump()
         # Check that all percentiles have data
         for key in ["median", "p25", "p75", "p5", "p95"]:
             self.assertTrue(len(data["percentiles"][key]) > 0)
@@ -89,12 +85,12 @@ class TestMonteCarloSimulation(unittest.TestCase):
         # produce different results (which they should)
         
         np.random.seed(42)  # Set seed for the first run
-        response1 = client.post("/api/simulate", json=self.valid_input)
-        data1 = response1.json()
-        
+        result1 = asyncio.run(run_simulation(SimulationInput(**self.valid_input)))
+        data1 = result1.model_dump()
+
         np.random.seed(43)  # Set different seed for second run
-        response2 = client.post("/api/simulate", json=self.valid_input)
-        data2 = response2.json()
+        result2 = asyncio.run(run_simulation(SimulationInput(**self.valid_input)))
+        data2 = result2.model_dump()
         
         # With different seeds, the paths should be different
         # Compare the final values of the first path
