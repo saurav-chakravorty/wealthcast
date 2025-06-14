@@ -20,7 +20,8 @@ class TestMonteCarloSimulation(unittest.TestCase):
             "return_std_dev_pct": 12.0,
             "inflation_pct": 2.5,
             "inflation_std_dev_pct": 1.0,
-            "num_simulations": 50  # Smaller number for faster tests
+            "num_simulations": 50,  # Smaller number for faster tests
+            "current_monthly_expense": 1000.0
         }
     
     def test_root_endpoint(self):
