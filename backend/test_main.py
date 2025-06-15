@@ -36,6 +36,9 @@ class TestMonteCarloSimulation(unittest.TestCase):
         self.assertIn("paths", data)
         self.assertIn("years", data)
         self.assertIn("percentiles", data)
+        self.assertIn("ruin_probability", data)
+        self.assertGreaterEqual(data["ruin_probability"], 0)
+        self.assertLessEqual(data["ruin_probability"], 100)
         for key in ["median", "p25", "p75", "p5", "p95"]:
             self.assertIn(key, data["percentiles"])
             self.assertEqual(len(data["percentiles"][key]), self.valid_input["end_year"] - self.valid_input["start_year"] + 1)
