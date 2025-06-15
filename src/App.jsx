@@ -81,6 +81,7 @@ function App() {
   });
   const [yAxisRange, setYAxisRange] = useState({ min: 'auto', max: 'auto' });
   const [customYRange, setCustomYRange] = useState({ min: '', max: '' });
+  const [ruinProbability, setRuinProbability] = useState(null);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -158,6 +159,15 @@ function App() {
       }
       const data = await response.json();
       setSimulationData(data);
+      if (typeof data.ruin_probability === 'number') {
+        setRuinProbability(data.ruin_probability);
+      } else {
+        const ruinCount = data.paths.filter(
+          (path) => path[path.length - 1].value <= 0
+        ).length;
+        const probability = (ruinCount / data.paths.length) * 100;
+        setRuinProbability(probability);
+      }
     } catch (e) {
       setError(e.message);
       console.error("Failed to fetch simulation data:", e);
@@ -174,11 +184,11 @@ function App() {
     return `₹${value}`;
   };
 
-  // Helper to map simulation years to actual years
-  const getYear = (index) => form.start_year + index;
+  // Helper to map simulation points to actual ages
+  const getAge = (index) => form.start_year + index;
 
-  // Helper to map a percentile/path array to actual years
-  const mapToActualYears = (arr) => arr.map((pt, idx) => ({ ...pt, year: getYear(idx) }));
+  // Helper to map a percentile/path array to actual ages
+  const mapToActualYears = (arr) => arr.map((pt, idx) => ({ ...pt, year: getAge(idx) }));
 
   // Helper to get Y-axis domain as a new array
   const getYAxisDomain = () => {
@@ -228,12 +238,12 @@ function App() {
               />
             </label>
             <label>
-              Start Year:
-              <input type="number" name="start_year" value={form.start_year} onChange={handleChange} min={1900} max={2100} required />
+              Retirement Age:
+              <input type="number" name="start_year" value={form.start_year} onChange={handleChange} min={0} max={150} required />
             </label>
             <label>
-              End Year:
-              <input type="number" name="end_year" value={form.end_year} onChange={handleChange} min={form.start_year} max={2100} required />
+              Age at Death:
+              <input type="number" name="end_year" value={form.end_year} onChange={handleChange} min={form.start_year} max={150} required />
             </label>
             <label>
               Expected Return (%):
@@ -331,7 +341,7 @@ function App() {
                     type="number"
                     domain={[form.start_year, form.end_year]}
                     tickCount={form.end_year - form.start_year + 1}
-                    label={{ value: 'Year', position: 'insideBottomRight', offset: -5 }}
+                    label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }}
                   />
                   <YAxis
                     tickFormatter={formatINR}
@@ -343,7 +353,7 @@ function App() {
                   />
                   <Tooltip
                     formatter={(value) => formatINR(value)}
-                    labelFormatter={(year) => `Year: ${year}`}
+                    labelFormatter={(year) => `Age: ${year}`}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
                   <Legend 
@@ -458,6 +468,12 @@ function App() {
                   ))}
                 </LineChart>
               </ResponsiveContainer>
+              {ruinProbability !== null && (
+                <p className="probability-note">
+                  Based on these simulations, there is a {ruinProbability.toFixed(1)}% chance that
+                  your portfolio will be depleted before your target age of death.
+                </p>
+              )}
             </div>
           )}
         </div>

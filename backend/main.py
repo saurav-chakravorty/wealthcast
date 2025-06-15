@@ -30,6 +30,7 @@ class SimulationResult(BaseModel):
     paths: List[List[SimulationPath]]
     years: List[int]
     percentiles: dict = {}  # Add percentiles as a dict
+    ruin_probability: float | None = None
 
 class SimulationInput(BaseModel):
     initial_corpus: float = Field(..., description="Initial investment amount")
@@ -104,11 +105,16 @@ async def run_simulation(input: SimulationInput):
     for pct, key in zip([50, 25, 75, 5, 95], ['median', 'p25', 'p75', 'p5', 'p95']):
         pct_values = np.percentile(all_yearly_values, pct, axis=0)
         percentiles[key] = [SimulationPath(year=year, value=round(val, 2)) for year, val in zip(year_labels, pct_values)]
-    
+
+    # Probability that the portfolio is depleted by the final year
+    ruin_count = sum(1 for path in all_paths_data if path[-1].value <= 0)
+    ruin_probability = (ruin_count / input.num_simulations) * 100
+
     return SimulationResult(
         paths=all_paths_data,
         years=year_labels,
-        percentiles=percentiles
+        percentiles=percentiles,
+        ruin_probability=round(ruin_probability, 2)
     )
 
 @app.get("/health")
