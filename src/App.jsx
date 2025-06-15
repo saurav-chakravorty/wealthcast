@@ -477,7 +477,7 @@ function App() {
               {ruinProbability !== null && (
                 <p className="probability-note">
                   Based on these simulations, there is a {ruinProbability.toFixed(1)}% chance that
-                  your portfolio will be depleted before your planned age at death.
+                  your portfolio will be depleted before your end of life.
                 </p>
               )}
             </div>
