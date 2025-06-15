@@ -8,11 +8,11 @@ WealthCast is a modern financial scenario analyzer that uses Monte Carlo simulat
 
 - **Monte Carlo Simulation:** Project your portfolio's future value under uncertainty.
 - **Percentile Visualization:** See 5th, 25th, 50th (median), 75th, and 95th percentiles.
-- **Depletion Probability:** Backend computes the chance your portfolio hits zero before your life expectancy.
+- **Depletion Probability:** Backend computes the chance your portfolio hits zero before your planned age at death.
 - **Expense Modeling:** Account for inflation-adjusted expenses in your retirement plan.
 - **Indian Rupee Support:** All values in ₹, with lakh/crore formatting.
 - **Interactive UI:** Toggle traces, adjust parameters, and see results instantly.
-- **Flexible Timeline:** Enter your retirement year and how many years you expect retirement to last.
+- **Flexible Timeline:** Enter your retirement age and your expected age at death.
 - **Docker & Railway Ready:** Easy to deploy locally or in the cloud.
 
 ---

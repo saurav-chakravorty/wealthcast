@@ -55,8 +55,8 @@ function App() {
   const [form, setForm] = useState({
     initial_corpus: 40000000, // 4 Cr
     current_monthly_expense: 250000, // 2.5 L
-    start_year: 2025,
-    life_expectancy: 54,
+    retirement_age: 60,
+    age_at_death: 90,
     expected_return_pct: 12.0,
     return_std_dev_pct: 9.0,
     inflation_pct: 6.0,
@@ -149,9 +149,11 @@ function App() {
     setError(null);
     setSimulationData(null);
     try {
+      const { retirement_age, age_at_death, ...rest } = form;
       const payload = {
-        ...form,
-        end_year: form.start_year + form.life_expectancy
+        ...rest,
+        start_year: retirement_age,
+        end_year: age_at_death
       };
       const response = await fetch(`${backendUrl}/api/simulate`, {
         method: 'POST',
@@ -189,7 +191,7 @@ function App() {
   };
 
   // Helper to map simulation points to actual ages
-  const getAge = (index) => index;
+  const getAge = (index) => form.retirement_age + index;
 
   // Helper to map a percentile/path array to age values
   const mapToActualYears = (arr) => arr.map((pt, idx) => ({ ...pt, year: getAge(idx) }));
@@ -242,12 +244,12 @@ function App() {
               />
             </label>
             <label>
-              Retirement Year:
-              <input type="number" name="start_year" value={form.start_year} onChange={handleChange} min={1900} max={2100} required />
+              Retirement Age:
+              <input type="number" name="retirement_age" value={form.retirement_age} onChange={handleChange} min={40} max={80} required />
             </label>
             <label>
-              Life Expectancy (years):
-              <input type="number" name="life_expectancy" value={form.life_expectancy} onChange={handleChange} min={1} max={100} required />
+              Age at Death:
+              <input type="number" name="age_at_death" value={form.age_at_death} onChange={handleChange} min={form.retirement_age + 1} max={120} required />
             </label>
             <label>
               Expected Return (%):
@@ -343,8 +345,8 @@ function App() {
                   <XAxis
                     dataKey="year"
                     type="number"
-                    domain={[0, form.life_expectancy]}
-                    tickCount={form.life_expectancy + 1}
+                    domain={[form.retirement_age, form.age_at_death]}
+                    tickCount={form.age_at_death - form.retirement_age + 1}
                     label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }}
                   />
                   <YAxis
@@ -475,7 +477,7 @@ function App() {
               {ruinProbability !== null && (
                 <p className="probability-note">
                   Based on these simulations, there is a {ruinProbability.toFixed(1)}% chance that
-                  your portfolio will be depleted before your life expectancy.
+                  your portfolio will be depleted before your planned age at death.
                 </p>
               )}
             </div>
