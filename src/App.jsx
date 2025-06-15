@@ -79,6 +79,8 @@ function App() {
     p25: true,
     p5: true
   });
+  const [yAxisRange, setYAxisRange] = useState({ min: 'auto', max: 'auto' });
+  const [customYRange, setCustomYRange] = useState({ min: '', max: '' });
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -124,6 +126,22 @@ function App() {
     setVisibleTraces((prev) => ({ ...prev, [trace]: !prev[trace] }));
   };
 
+  const handleYAxisRangeChange = (type, value) => {
+    if (type === 'reset') {
+      setYAxisRange({ min: 'auto', max: 'auto' });
+      setCustomYRange({ min: '', max: '' });
+    } else {
+      const numValue = value === '' ? 'auto' : parseINRInput(value);
+      console.log(`Setting ${type} to:`, { value, numValue });
+      setYAxisRange((prev) => {
+        const newRange = { ...prev, [type]: numValue };
+        console.log('New Y-axis range:', newRange);
+        return newRange;
+      });
+      setCustomYRange((prev) => ({ ...prev, [type]: value }));
+    }
+  };
+
   const fetchSimulationData = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -161,6 +179,16 @@ function App() {
 
   // Helper to map a percentile/path array to actual years
   const mapToActualYears = (arr) => arr.map((pt, idx) => ({ ...pt, year: getYear(idx) }));
+
+  // Helper to get Y-axis domain as a new array
+  const getYAxisDomain = () => {
+    const min = yAxisRange.min === 'auto' ? 'dataMin' : Number(yAxisRange.min);
+    const max = yAxisRange.max === 'auto' ? 'dataMax' : Number(yAxisRange.max);
+    return [min, max];
+  };
+
+  // Generate a key for the chart to force re-render on domain change
+  const chartKey = `${yAxisRange.min}-${yAxisRange.max}`;
 
   return (
     <div className="app-container">
@@ -238,7 +266,7 @@ function App() {
 
           {simulationData && (
             <div className="chart-container">
-              <div className="chart-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', alignItems: 'center' }}>
+              <div className="chart-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', alignItems: 'center', marginBottom: '1em' }}>
                 <label className="toggle-label">
                   <input
                     type="checkbox"
@@ -264,8 +292,39 @@ function App() {
                   <input type="checkbox" checked={visibleTraces.p5} onChange={() => handleTraceToggle('p5')} /> 5th
                 </label>
               </div>
+              
+              <div className="zoom-controls" style={{ display: 'flex', flexWrap: 'wrap', gap: '1em', alignItems: 'center', marginBottom: '1em', padding: '0.5em', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+                <span style={{ fontWeight: 500 }}>Y-Axis Range:</span>
+                <label>
+                  Min (₹):
+                  <input
+                    type="text"
+                    value={customYRange.min}
+                    onChange={(e) => handleYAxisRangeChange('min', e.target.value)}
+                    placeholder="Auto"
+                    style={{ width: '100px', marginLeft: '0.5em' }}
+                  />
+                </label>
+                <label>
+                  Max (₹):
+                  <input
+                    type="text"
+                    value={customYRange.max}
+                    onChange={(e) => handleYAxisRangeChange('max', e.target.value)}
+                    placeholder="Auto"
+                    style={{ width: '100px', marginLeft: '0.5em' }}
+                  />
+                </label>
+                <button 
+                  type="button"
+                  onClick={() => handleYAxisRangeChange('reset')}
+                  style={{ padding: '0.25em 0.5em', fontSize: '0.9em' }}
+                >
+                  Reset to Auto
+                </button>
+              </div>
               <ResponsiveContainer width="100%" height={500}>
-                <LineChart margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                <LineChart key={chartKey} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="year"
@@ -278,6 +337,9 @@ function App() {
                     tickFormatter={formatINR}
                     label={{ value: 'Portfolio Value\n(INR)', angle: -90, position: 'insideLeft', offset: 0 }}
                     width={120}
+                    domain={getYAxisDomain()}
+                    allowDataOverflow={true}
+                    scale="linear"
                   />
                   <Tooltip
                     formatter={(value) => formatINR(value)}
