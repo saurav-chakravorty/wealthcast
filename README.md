@@ -72,12 +72,50 @@ npm run dev
 
 ---
 
-
 ## Development Notes
 
 - **Frontend:** React + Vite, Recharts for visualization, INR formatting.
 - **Backend:** FastAPI, NumPy for simulation, CORS enabled.
 - **Testing:** Backend unit tests in `backend/test_main.py`.
+- **Linting:** Python code is linted with [Ruff](https://github.com/astral-sh/ruff); JavaScript/TypeScript is linted with ESLint.
+
+---
+
+## Running Tests & Linters
+
+### Python (backend)
+
+Install dev dependencies:
+
+```bash
+pip install -r requirement.txt  # Includes pytest & ruff
+```
+
+Run the test suite (this will automatically run Ruff via `TestCodeQuality`):
+
+```bash
+pytest -q
+```
+
+Run Ruff manually (optional):
+
+```bash
+ruff check backend
+```
+
+### JavaScript/TypeScript (frontend)
+
+Install dependencies (if not already):
+
+```bash
+npm install
+```
+
+Run ESLint:
+
+```bash
+npm run lint
+```
 
 ---
 
