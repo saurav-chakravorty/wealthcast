@@ -238,12 +238,12 @@ function App() {
               />
             </label>
             <label>
-              Retirement Age:
-              <input type="number" name="start_year" value={form.start_year} onChange={handleChange} min={0} max={150} required />
+              Retirement Year:
+              <input type="number" name="start_year" value={form.start_year} onChange={handleChange} min={1900} max={2100} required />
             </label>
             <label>
-              Age at Death:
-              <input type="number" name="end_year" value={form.end_year} onChange={handleChange} min={form.start_year} max={150} required />
+              Life Expectancy (years):
+              <input type="number" name="end_year" value={form.end_year} onChange={handleChange} min={form.start_year} max={2100} required />
             </label>
             <label>
               Expected Return (%):
@@ -471,7 +471,7 @@ function App() {
               {ruinProbability !== null && (
                 <p className="probability-note">
                   Based on these simulations, there is a {ruinProbability.toFixed(1)}% chance that
-                  your portfolio will be depleted before your target age of death.
+                  your portfolio will be depleted before your life expectancy.
                 </p>
               )}
             </div>
