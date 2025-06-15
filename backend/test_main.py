@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 import asyncio
-from typing import Dict, Any
 from pydantic import ValidationError
 
 from backend.main import SimulationInput, run_simulation, root
@@ -70,12 +69,17 @@ class TestMonteCarloSimulation(unittest.TestCase):
         # Check that all percentiles have data
         for key in ["median", "p25", "p75", "p5", "p95"]:
             self.assertTrue(len(data["percentiles"][key]) > 0)
+
+        # Helper to get the last value for a percentile key
+        def last_percentile(percentile_key: str) -> float:  # noqa: D401
+            """Return last year's simulated corpus for the given percentile."""
+            return data["percentiles"][percentile_key][-1]["value"]
+
         # Check order: p95 >= p75 >= median >= p25 >= p5 (last year)
-        last = lambda key: data["percentiles"][key][-1]["value"]
-        self.assertGreaterEqual(last("p95"), last("p75"))
-        self.assertGreaterEqual(last("p75"), last("median"))
-        self.assertGreaterEqual(last("median"), last("p25"))
-        self.assertGreaterEqual(last("p25"), last("p5"))
+        self.assertGreaterEqual(last_percentile("p95"), last_percentile("p75"))
+        self.assertGreaterEqual(last_percentile("p75"), last_percentile("median"))
+        self.assertGreaterEqual(last_percentile("median"), last_percentile("p25"))
+        self.assertGreaterEqual(last_percentile("p25"), last_percentile("p5"))
     
     def test_simulation_seeded(self):
         """Test that with the same random seed, simulation is deterministic"""
@@ -96,9 +100,10 @@ class TestMonteCarloSimulation(unittest.TestCase):
         # Compare the final values of the first path
         path1_final = data1["paths"][0][-1]["value"]
         path2_final = data2["paths"][0][-1]["value"]
-        
-        # They could still be the same by chance, but very unlikely
-        # We're not asserting inequality to avoid flaky tests
+
+        # They could still be the same by chance, but very unlikely; just ensure values are floats
+        self.assertIsInstance(path1_final, float)
+        self.assertIsInstance(path2_final, float)
         
 if __name__ == "__main__":
     unittest.main()
