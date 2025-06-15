@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import './App.css'
 import {
   LineChart,
@@ -90,6 +90,24 @@ function App() {
   const [yMin, setYMin] = useState('');
   const [yMax, setYMax] = useState('');
   const [useLogScale, setUseLogScale] = useState(false);
+
+  // Calculate default Y-axis extents from the simulation data
+  const [autoYMin, autoYMax] = useMemo(() => {
+    if (!simulationData) return [0, 0];
+    let values = [];
+    Object.values(simulationData.percentiles).forEach((arr) => {
+      arr.forEach((pt) => values.push(pt.value));
+    });
+    if (showAllPercentiles) {
+      simulationData.paths.forEach((path) => {
+        path.forEach((pt) => values.push(pt.value));
+      });
+    }
+    const positiveValues = values.filter((v) => v > 0);
+    const minVal = positiveValues.length > 0 ? Math.min(...positiveValues) : 1;
+    const maxVal = values.length > 0 ? Math.max(...values) : 1;
+    return [minVal, maxVal];
+  }, [simulationData, showAllPercentiles]);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -326,11 +344,11 @@ function App() {
                       useLogScale
                         ? yMin !== ''
                           ? Math.max(1, Number(yMin))
-                          : 1
+                          : autoYMin
                         : yMin !== ''
-                        ? Number(yMin)
-                        : 0,
-                      yMax !== '' ? Number(yMax) : 'auto',
+                          ? Number(yMin)
+                          : Math.min(0, autoYMin),
+                      yMax !== '' ? Number(yMax) : autoYMax,
                     ]}
                     scale={useLogScale ? 'log' : 'linear'}
                     allowDataOverflow
