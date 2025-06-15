@@ -284,7 +284,48 @@ function App() {
                     labelFormatter={(year) => `Year: ${year}`}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
-                  <Legend verticalAlign="top" height={36} iconType="plainline"/>
+                  <Legend 
+                    verticalAlign="top" 
+                    height={36} 
+                    iconType="plainline"
+                    payload={[
+                      ...(visibleTraces.p95 ? [{ 
+                        value: '95th Percentile', 
+                        type: 'line', 
+                        color: CHART_COLORS.p95,
+                        strokeDasharray: '',
+                        strokeWidth: 2
+                      }] : []),
+                      ...(visibleTraces.p75 ? [{ 
+                        value: '75th Percentile', 
+                        type: 'line', 
+                        color: CHART_COLORS.p75,
+                        strokeDasharray: '',
+                        strokeWidth: 2
+                      }] : []),
+                      ...(visibleTraces.median ? [{ 
+                        value: '50th Percentile (Median)', 
+                        type: 'line', 
+                        color: CHART_COLORS.median,
+                        strokeDasharray: '',
+                        strokeWidth: 2
+                      }] : []),
+                      ...(visibleTraces.p25 ? [{ 
+                        value: '25th Percentile', 
+                        type: 'line', 
+                        color: CHART_COLORS.p25,
+                        strokeDasharray: '',
+                        strokeWidth: 2
+                      }] : []),
+                      ...(visibleTraces.p5 ? [{ 
+                        value: '5th Percentile', 
+                        type: 'line', 
+                        color: CHART_COLORS.p5,
+                        strokeDasharray: '',
+                        strokeWidth: 2
+                      }] : [])
+                    ]}
+                  />
                   {/* Conditionally render each percentile line based on visibility */}
                   {visibleTraces.p95 && (
                     <Line
