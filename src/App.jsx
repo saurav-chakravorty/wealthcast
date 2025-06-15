@@ -9,7 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Label,
-  Legend
+  Legend,
+  DefaultLegendContent,
 } from 'recharts';
 import logo from '/wealthcast-logo.png'; // Adjust the filename/extension as needed
 
@@ -44,6 +45,13 @@ const parseINRInput = (str) => {
   if (s.toLowerCase().endsWith('cr')) return Math.round(parseFloat(s) * 1e7);
   if (s.toLowerCase().endsWith('l')) return Math.round(parseFloat(s) * 1e5);
   return parseInt(s, 10) || 0;
+};
+
+// Filter out the automatically generated legend entries for the
+// additional percentile lines that all share the "value" label.
+const renderLegend = (props) => {
+  const filtered = props.payload?.filter((entry) => entry.value !== 'value');
+  return <DefaultLegendContent {...props} payload={filtered} />;
 };
 
 // Custom label for percentile lines
@@ -284,7 +292,12 @@ function App() {
                     labelFormatter={(year) => `Year: ${year}`}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
-                  <Legend verticalAlign="top" height={36} iconType="plainline"/>
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    iconType="plainline"
+                    content={renderLegend}
+                  />
                   {/* Conditionally render each percentile line based on visibility */}
                   {visibleTraces.p95 && (
                     <Line
