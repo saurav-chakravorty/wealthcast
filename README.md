@@ -12,6 +12,7 @@ WealthCast is a modern financial scenario analyzer that uses Monte Carlo simulat
 - **Expense Modeling:** Account for inflation-adjusted expenses in your retirement plan.
 - **Indian Rupee Support:** All values in ₹, with lakh/crore formatting.
 - **Interactive UI:** Toggle traces, adjust parameters, and see results instantly.
+- **Flexible Timeline:** Enter your retirement year and how many years you expect retirement to last.
 - **Docker & Railway Ready:** Easy to deploy locally or in the cloud.
 
 ---

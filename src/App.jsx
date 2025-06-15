@@ -56,7 +56,7 @@ function App() {
     initial_corpus: 40000000, // 4 Cr
     current_monthly_expense: 250000, // 2.5 L
     start_year: 2025,
-    end_year: 2079,
+    life_expectancy: 54,
     expected_return_pct: 12.0,
     return_std_dev_pct: 9.0,
     inflation_pct: 6.0,
@@ -149,10 +149,14 @@ function App() {
     setError(null);
     setSimulationData(null);
     try {
+      const payload = {
+        ...form,
+        end_year: form.start_year + form.life_expectancy
+      };
       const response = await fetch(`${backendUrl}/api/simulate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify(payload)
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -185,9 +189,9 @@ function App() {
   };
 
   // Helper to map simulation points to actual ages
-  const getAge = (index) => form.start_year + index;
+  const getAge = (index) => index;
 
-  // Helper to map a percentile/path array to actual ages
+  // Helper to map a percentile/path array to age values
   const mapToActualYears = (arr) => arr.map((pt, idx) => ({ ...pt, year: getAge(idx) }));
 
   // Helper to get Y-axis domain as a new array
@@ -243,7 +247,7 @@ function App() {
             </label>
             <label>
               Life Expectancy (years):
-              <input type="number" name="end_year" value={form.end_year} onChange={handleChange} min={form.start_year} max={2100} required />
+              <input type="number" name="life_expectancy" value={form.life_expectancy} onChange={handleChange} min={1} max={100} required />
             </label>
             <label>
               Expected Return (%):
@@ -339,8 +343,8 @@ function App() {
                   <XAxis
                     dataKey="year"
                     type="number"
-                    domain={[form.start_year, form.end_year]}
-                    tickCount={form.end_year - form.start_year + 1}
+                    domain={[0, form.life_expectancy]}
+                    tickCount={form.life_expectancy + 1}
                     label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }}
                   />
                   <YAxis
