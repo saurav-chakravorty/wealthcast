@@ -87,6 +87,9 @@ function App() {
     p25: true,
     p5: true
   });
+  const [yMin, setYMin] = useState('');
+  const [yMax, setYMax] = useState('');
+  const [useLogScale, setUseLogScale] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -271,6 +274,39 @@ function App() {
                 <label style={{ color: CHART_COLORS.p5 }}>
                   <input type="checkbox" checked={visibleTraces.p5} onChange={() => handleTraceToggle('p5')} /> 5th
                 </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5em', alignItems: 'center', marginTop: '0.5em' }}>
+                  <label className="toggle-label">
+                    <input
+                      type="checkbox"
+                      checked={useLogScale}
+                      onChange={(e) => setUseLogScale(e.target.checked)}
+                    />
+                    Log Scale
+                  </label>
+                  <label>
+                    Y Min:
+                    <input
+                      type="number"
+                      value={yMin}
+                      onChange={(e) => setYMin(e.target.value)}
+                      placeholder="auto"
+                      style={{ width: '6em' }}
+                    />
+                  </label>
+                  <label>
+                    Y Max:
+                    <input
+                      type="number"
+                      value={yMax}
+                      onChange={(e) => setYMax(e.target.value)}
+                      placeholder="auto"
+                      style={{ width: '6em' }}
+                    />
+                  </label>
+                  <button type="button" onClick={() => { setYMin(''); setYMax(''); }} style={{ padding: '0.4em 0.6em' }}>
+                    Reset Scale
+                  </button>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={500}>
                 <LineChart margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
@@ -286,6 +322,18 @@ function App() {
                     tickFormatter={formatINR}
                     label={{ value: 'Portfolio Value\n(INR)', angle: -90, position: 'insideLeft', offset: 0 }}
                     width={120}
+                    domain={[
+                      useLogScale
+                        ? yMin !== ''
+                          ? Math.max(1, Number(yMin))
+                          : 1
+                        : yMin !== ''
+                        ? Number(yMin)
+                        : 0,
+                      yMax !== '' ? Number(yMax) : 'auto',
+                    ]}
+                    scale={useLogScale ? 'log' : 'linear'}
+                    allowDataOverflow
                   />
                   <Tooltip
                     formatter={(value) => formatINR(value)}
