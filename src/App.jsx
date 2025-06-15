@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import './App.css'
 import {
   LineChart,
@@ -9,7 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Label,
-  Legend
+  Legend,
+  DefaultLegendContent,
 } from 'recharts';
 import logo from '/wealthcast-logo.png'; // Adjust the filename/extension as needed
 
@@ -46,6 +47,13 @@ const parseINRInput = (str) => {
   return parseInt(s, 10) || 0;
 };
 
+// Filter out the automatically generated legend entries for the
+// additional percentile lines that all share the "value" label.
+const renderLegend = (props) => {
+  const filtered = props.payload?.filter((entry) => entry.value !== 'value');
+  return <DefaultLegendContent {...props} payload={filtered} />;
+};
+
 // Custom label for percentile lines
 const PercentileLabel = ({ x, y, value, label }) => (
   <text x={x + 8} y={y} dy={4} fontSize={13} fontWeight="bold" fill="#444" textAnchor="start">{label}</text>
@@ -79,6 +87,27 @@ function App() {
     p25: true,
     p5: true
   });
+  const [yMin, setYMin] = useState('');
+  const [yMax, setYMax] = useState('');
+  const [useLogScale, setUseLogScale] = useState(false);
+
+  // Calculate default Y-axis extents from the simulation data
+  const [autoYMin, autoYMax] = useMemo(() => {
+    if (!simulationData) return [0, 0];
+    let values = [];
+    Object.values(simulationData.percentiles).forEach((arr) => {
+      arr.forEach((pt) => values.push(pt.value));
+    });
+    if (showAllPercentiles) {
+      simulationData.paths.forEach((path) => {
+        path.forEach((pt) => values.push(pt.value));
+      });
+    }
+    const positiveValues = values.filter((v) => v > 0);
+    const minVal = positiveValues.length > 0 ? Math.min(...positiveValues) : 1;
+    const maxVal = values.length > 0 ? Math.max(...values) : 1;
+    return [minVal, maxVal];
+  }, [simulationData, showAllPercentiles]);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -263,6 +292,39 @@ function App() {
                 <label style={{ color: CHART_COLORS.p5 }}>
                   <input type="checkbox" checked={visibleTraces.p5} onChange={() => handleTraceToggle('p5')} /> 5th
                 </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5em', alignItems: 'center', marginTop: '0.5em' }}>
+                  <label className="toggle-label">
+                    <input
+                      type="checkbox"
+                      checked={useLogScale}
+                      onChange={(e) => setUseLogScale(e.target.checked)}
+                    />
+                    Log Scale
+                  </label>
+                  <label>
+                    Y Min:
+                    <input
+                      type="number"
+                      value={yMin}
+                      onChange={(e) => setYMin(e.target.value)}
+                      placeholder="auto"
+                      style={{ width: '6em' }}
+                    />
+                  </label>
+                  <label>
+                    Y Max:
+                    <input
+                      type="number"
+                      value={yMax}
+                      onChange={(e) => setYMax(e.target.value)}
+                      placeholder="auto"
+                      style={{ width: '6em' }}
+                    />
+                  </label>
+                  <button type="button" onClick={() => { setYMin(''); setYMax(''); }} style={{ padding: '0.4em 0.6em' }}>
+                    Reset Scale
+                  </button>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={500}>
                 <LineChart margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
@@ -278,13 +340,30 @@ function App() {
                     tickFormatter={formatINR}
                     label={{ value: 'Portfolio Value\n(INR)', angle: -90, position: 'insideLeft', offset: 0 }}
                     width={120}
+                    domain={[
+                      useLogScale
+                        ? yMin !== ''
+                          ? Math.max(1, Number(yMin))
+                          : autoYMin
+                        : yMin !== ''
+                          ? Number(yMin)
+                          : Math.min(0, autoYMin),
+                      yMax !== '' ? Number(yMax) : autoYMax,
+                    ]}
+                    scale={useLogScale ? 'log' : 'linear'}
+                    allowDataOverflow
                   />
                   <Tooltip
                     formatter={(value) => formatINR(value)}
                     labelFormatter={(year) => `Year: ${year}`}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
-                  <Legend verticalAlign="top" height={36} iconType="plainline"/>
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    iconType="plainline"
+                    content={renderLegend}
+                  />
                   {/* Conditionally render each percentile line based on visibility */}
                   {visibleTraces.p95 && (
                     <Line
