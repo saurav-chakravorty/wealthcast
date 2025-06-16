@@ -34,6 +34,7 @@ class SimulationResult(BaseModel):
 
 class SimulationInput(BaseModel):
     initial_corpus: float = Field(..., description="Initial investment amount")
+    current_age: int = Field(..., description="Current age of the person")
     start_year: int = Field(..., description="Year to start simulation")
     end_year: int = Field(..., description="Year to end simulation")
     expected_return_pct: float = Field(..., description="Expected annual return percentage")
@@ -55,7 +56,7 @@ async def run_simulation(input: SimulationInput):
     inflation = input.inflation_pct / 100
     inflation_std_dev = input.inflation_std_dev_pct / 100
     
-    # Calculate simulation horizon in years
+    # Calculate simulation horizon in years (retirement years only)
     simulation_horizon = input.end_year - input.start_year + 1
     
     # Prepare result containers
@@ -64,26 +65,29 @@ async def run_simulation(input: SimulationInput):
     all_yearly_values = []  # To store values for each year across all simulations
     
     # Run simulations
-    current_year = datetime.datetime.now().year
-    years_to_project = max(0, input.start_year - current_year)
+    years_to_project = max(0, input.start_year - input.current_age)
+    
     for _ in range(input.num_simulations):
-        # Project corpus and expense forward if needed
+        # Project corpus and expense forward to retirement age
         projected_corpus = input.initial_corpus
         projected_expense = input.current_monthly_expense
+        
         if years_to_project > 0:
             for _ in range(years_to_project):
                 random_return = np.random.normal(expected_return, return_std_dev)
                 random_inflation = np.random.normal(inflation, inflation_std_dev)
                 projected_corpus *= (1 + random_return)
                 projected_expense *= (1 + random_inflation)
+        
+        # Now simulate retirement years only
         path_data = []
         current_value = projected_corpus
         expense = projected_expense * 12  # Start with annual expense
         
-        # First data point at year 0
-        path_data.append(SimulationPath(year=0, value=current_value))
+        # First data point at retirement (year 0 of retirement)
+        path_data.append(SimulationPath(year=0, value=round(current_value, 2)))
         
-        # Simulate for each subsequent year
+        # Simulate for each subsequent retirement year
         for year in range(1, simulation_horizon):
             random_return = np.random.normal(expected_return, return_std_dev)
             random_inflation = np.random.normal(inflation, inflation_std_dev)
@@ -121,7 +125,3 @@ async def run_simulation(input: SimulationInput):
 def health_check():
     return {"status": "ok"}
 
-# Further development will include:
-# - API endpoints for managing financial scenarios
-# - Monte Carlo simulation logic
-# - Data validation using Pydantic models

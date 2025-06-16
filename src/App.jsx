@@ -55,10 +55,11 @@ function App() {
   const [form, setForm] = useState({
     initial_corpus: 40000000, // 4 Cr
     current_monthly_expense: 250000, // 2.5 L
+    current_age: 45,
     retirement_age: 60,
     age_at_death: 90,
     expected_return_pct: 12.0,
-    return_std_dev_pct: 9.0,
+    return_std_dev_pct: 15.0,
     inflation_pct: 6.0,
     inflation_std_dev_pct: 2.0,
     num_simulations: 100
@@ -149,9 +150,10 @@ function App() {
     setError(null);
     setSimulationData(null);
     try {
-      const { retirement_age, age_at_death, ...rest } = form;
+      const { retirement_age, age_at_death, current_age, ...rest } = form;
       const payload = {
         ...rest,
+        current_age: current_age,
         start_year: retirement_age,
         end_year: age_at_death
       };
@@ -190,11 +192,21 @@ function App() {
     return `₹${value}`;
   };
 
-  // Helper to map simulation points to actual ages
+  // Helper to map simulation points to actual ages (retirement years only)
   const getAge = (index) => form.retirement_age + index;
 
-  // Helper to map a percentile/path array to age values
-  const mapToActualYears = (arr) => arr.map((pt, idx) => ({ ...pt, year: getAge(idx) }));
+  // Helper to get the year for a given age
+  const getYear = (age) => {
+    const currentYear = new Date().getFullYear();
+    return currentYear + (age - form.current_age);
+  };
+
+  // Helper to map a percentile/path array to age and year values
+  const mapToActualYears = (arr) => arr.map((pt, idx) => ({ 
+    ...pt, 
+    age: getAge(idx),
+    year: getYear(getAge(idx))
+  }));
 
   // Helper to get Y-axis domain as a new array
   const getYAxisDomain = () => {
@@ -206,6 +218,43 @@ function App() {
   // Generate a key for the chart to force re-render on domain change
   const chartKey = `${yAxisRange.min}-${yAxisRange.max}`;
 
+  // Custom tooltip content that filters out individual path data
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      // Filter to only show the main percentile traces by name
+      const percentileNames = [
+        '95th Percentile',
+        '75th Percentile',
+        '50th Percentile (Median)',
+        '25th Percentile',
+        '5th Percentile'
+      ];
+      const filteredPayload = payload.filter(entry => percentileNames.includes(entry.name));
+      
+      if (filteredPayload.length === 0) return null;
+      
+      return (
+        <div className="custom-tooltip" style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          border: '1px solid #ccc',
+          borderRadius: '4px',
+          padding: '10px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: '#333' }}>
+            {`Age: ${label}, Year: ${getYear(label)}`}
+          </p>
+          {filteredPayload.map((entry, index) => (
+            <p key={index} style={{ margin: '4px 0', color: entry.color }}>
+              {`${entry.name}: ${formatINR(entry.value)}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="app-container">
       <img src={logo} alt="Wealthcast Logo" style={{ height: 60, marginBottom: 16 }} />
@@ -213,8 +262,13 @@ function App() {
       <div className="main-content">
         <div className="input-section">
           <form className="card" onSubmit={fetchSimulationData}>
+            <p style={{ marginBottom: '1em', color: '#666', fontSize: '0.9em' }}>
+              This simulation projects your current corpus and expenses forward to retirement age, then shows 
+              different possible outcomes during your retirement years. The chart displays retirement years only, 
+              starting with your projected corpus at retirement.
+            </p>
             <label>
-              Initial Corpus (₹):
+              Current Corpus (₹):
               <input
                 type="text"
                 name="initial_corpus"
@@ -244,11 +298,15 @@ function App() {
               />
             </label>
             <label>
-              Retirement Age:
-              <input type="number" name="retirement_age" value={form.retirement_age} onChange={handleChange} min={40} max={80} required />
+              Current Age (Years):
+              <input type="number" name="current_age" value={form.current_age} onChange={handleChange} min={18} max={80} required />
             </label>
             <label>
-              Age at Death:
+              Retirement Age (Years):
+              <input type="number" name="retirement_age" value={form.retirement_age} onChange={handleChange} min={form.current_age + 1} max={80} required />
+            </label>
+            <label>
+              Age at Death (Years):
               <input type="number" name="age_at_death" value={form.age_at_death} onChange={handleChange} min={form.retirement_age + 1} max={120} required />
             </label>
             <label>
@@ -343,11 +401,20 @@ function App() {
                 <LineChart key={chartKey} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
-                    dataKey="year"
+                    dataKey="age"
                     type="number"
                     domain={[form.retirement_age, form.age_at_death]}
-                    tickCount={form.age_at_death - form.retirement_age + 1}
+                    tickCount={Math.min(form.age_at_death - form.retirement_age + 1, 10)}
                     label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }}
+                  />
+                  <XAxis
+                    xAxisId="year"
+                    dataKey="year"
+                    type="number"
+                    domain={[getYear(form.retirement_age), getYear(form.age_at_death)]}
+                    tickCount={Math.min(form.age_at_death - form.retirement_age + 1, 10)}
+                    orientation="top"
+                    label={{ value: 'Year', position: 'insideTopRight', offset: -5 }}
                   />
                   <YAxis
                     tickFormatter={formatINR}
@@ -358,8 +425,7 @@ function App() {
                     scale="linear"
                   />
                   <Tooltip
-                    formatter={(value) => formatINR(value)}
-                    labelFormatter={(year) => `Age: ${year}`}
+                    content={<CustomTooltip />}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
                   <Legend 
@@ -470,6 +536,9 @@ function App() {
                       stroke={CHART_COLORS.other}
                       strokeOpacity={0.2}
                       dot={false}
+                      activeDot={false}
+                      legendType="none"
+                      name=""
                     />
                   ))}
                 </LineChart>
